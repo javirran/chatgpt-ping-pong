@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ping Pong Game</title>
+    <style>
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            border: 1px solid #000;
+        }
+        #paddleA, #paddleB {
+            position: absolute;
+            width: 10px;
+            height: 60px;
+            background-color: #000;
+        }
+        #paddleA {
+            left: 0;
+        }
+        #paddleB {
+            right: 0;
+        }
+        #ball {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="paddleA"></div>
+        <div id="paddleB"></div>
+        <div id="ball"></div>
+    </div>
+    <div id="info-container">
+        <div id="paddleAScore"></div>
+        <div id="paddleBScore"></div>
+    </div>
+
+    <script>
+        // Init UI
+        var aScoreDiv = document.getElementById("paddleAScore");
+        aScoreDiv.innerHTML = "User score: ";
+        var bScoreDiv = document.getElementById("paddleBScore");
+        bScoreDiv.innerHTML = "AI score: ";
+
+        // Game logic variables
+        var paddleA = document.getElementById("paddleA");
+        var paddleB = document.getElementById("paddleB");
+        var ball = document.getElementById("ball");
+
+        var container = document.getElementById("game-container");
+        var containerRect = container.getBoundingClientRect();
+
+        var paddleA_Y = containerRect.height / 2 - paddleA.offsetHeight / 2;
+        var paddleB_Y = containerRect.height / 2 - paddleB.offsetHeight / 2;
+
+        // User paddle speed
+        var paddleA_speed = 40;
+        // AI paddle speed
+        var paddleB_speed = 3;
+        var ball_X = containerRect.width / 2 - ball.offsetWidth / 2;
+        var ball_Y = containerRect.height / 2 - ball.offsetHeight / 2;
+        var ball_speed_X = 3;
+        var ball_speed_Y = 3;
+
+        var scoreA = 0;
+        var scoreB = 0;
+
+        var winningScore = 5; // Number of points needed to win
+        var gameEnded = false;
+
+        // Update the game elements' positions
+        function update() {
+            // Update paddles' positions
+            paddleA.style.top = paddleA_Y + "px";
+            paddleB.style.top = paddleB_Y + "px";
+
+            // Update ball's position
+            ball.style.left = ball_X + "px";
+            ball.style.top = ball_Y + "px";
+
+            // Move ball
+            ball_X += ball_speed_X;
+            ball_Y += ball_speed_Y;
+
+            // Check ball collision with container boundaries
+            if (ball_Y <= 0 || ball_Y + ball.offsetHeight >= containerRect.height) {
+                ball_speed_Y *= -1;
+            }
+
+            // Check ball collision with paddles
+            if (ball_X <= paddleA.offsetWidth &&
+                ball_Y + ball.offsetHeight >= paddleA_Y &&
+                ball_Y <= paddleA_Y + paddleA.offsetHeight) {
+                ball_speed_X *= -1;
+                increaseScore("A");
+            }
+
+            if (ball_X + ball.offsetWidth >= containerRect.width - paddleB.offsetWidth &&
+                ball_Y + ball.offsetHeight >= paddleB_Y &&
+                ball_Y <= paddleB_Y + paddleB.offsetHeight) {
+                ball_speed_X *= -1;
+                increaseScore("B");
+            }
+
+            // Check paddle boundaries
+            if (paddleA_Y <= 0) {
+                paddleA_Y = 0;
+            }
+
+            if (paddleA_Y >= containerRect.height - paddleA.offsetHeight) {
+                paddleA_Y = containerRect.height - paddleA.offsetHeight;
+            }
+
+            if (paddleB_Y <= 0) {
+                paddleB_Y = 0;
+            }
+
+            if (paddleB_Y >= containerRect.height - paddleB.offsetHeight) {
+                paddleB_Y = containerRect.height - paddleB.offsetHeight;
+            }
+
+            // AI opponent
+            if (!gameEnded) {
+                // Move paddleB towards the ball's Y position
+                if (paddleB_Y + paddleB.offsetHeight / 2 < ball_Y + ball.offsetHeight / 2) {
+                    paddleB_Y += paddleB_speed;
+                } else {
+                    paddleB_Y -= paddleB_speed;
+                }
+            }
+
+            // Check for winning condition
+            if (scoreA >= winningScore || scoreB >= winningScore) {
+                gameEnded = true;
+                showWinner();
+            }
+        }
+
+        // Event listeners for paddle movement
+        document.addEventListener("keydown", function (event) {
+            if (event.code === "ArrowUp") {
+                paddleA_Y -= paddleA_speed;
+            } else if (event.code === "ArrowDown") {
+                paddleA_Y += paddleA_speed;
+            } else if (event.code === "KeyR" && gameEnded) {
+                resetGame();
+            }
+        });
+
+        // Increase the score for the specified player
+        function increaseScore(player) {
+            if (!gameEnded) {
+                if (player === "A") {
+                    scoreA++;
+                } else if (player === "B") {
+                    scoreB++;
+                }
+                var aScoreDiv = document.getElementById("paddleAScore");
+                aScoreDiv.innerHTML = "User score: " + scoreA;
+                var bScoreDiv = document.getElementById("paddleBScore");
+                bScoreDiv.innerHTML = "AI score: " + scoreB;
+            }
+        }
+
+        // Display the winner
+        function showWinner() {
+            var winner = "";
+            if (scoreA >= winningScore) {
+                winner = "AI";
+            } else if (scoreB >= winningScore) {
+                winner = "User";
+            }
+
+            var message = "Game Over!\n" + winner + " wins!\nPress 'R' to restart.";
+            alert(message);
+        }
+
+        // Reset the game
+        function resetGame() {
+            paddleA_Y = containerRect.height / 2 - paddleA.offsetHeight / 2;
+            paddleB_Y = containerRect.height / 2 - paddleB.offsetHeight / 2;
+            ball_X = containerRect.width / 2 - ball.offsetWidth / 2;
+            ball_Y = containerRect.height / 2 - ball.offsetHeight / 2;
+            scoreA = 0;
+            scoreB = 0;
+            gameEnded = false;
+        }
+
+        // Game loop
+        setInterval(update, 10);
+    </script>
+</body>
+</html>
