@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import cross_origin
 import openai
 
 app = Flask(__name__)
@@ -8,9 +9,11 @@ openai.api_key = 'YOUR_OPENAI_API_KEY'
 
 # Define the endpoint for receiving user messages
 @app.route('/follow-ball', methods=['POST'])
+@cross_origin()
 def follow_ball():
     # Get user input from the request
     user_input = request.json['input']
+    print('*user_input*, ' + user_input)
 
     # Call the ChatGPT API
     response = openai.Completion.create(
@@ -31,7 +34,9 @@ def follow_ball():
         'message': message
     }
 
-    return jsonify(response_data)
+    response = jsonify(response_data)
+
+    return response
 
 if __name__ == '__main__':
     app.run()

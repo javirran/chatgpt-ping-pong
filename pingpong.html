@@ -39,6 +39,12 @@
         <div id="paddleAScore"></div>
         <div id="paddleBScore"></div>
     </div>
+    <div id="user-input">
+        <button type="button" id="submit-button">Submit!</button>
+    </div>
+    <div id="response-message">
+        Waiting response...
+    </div>
 
     <script>
         // Init UI
@@ -64,8 +70,8 @@
         var paddleB_speed = 3;
         var ball_X = containerRect.width / 2 - ball.offsetWidth / 2;
         var ball_Y = containerRect.height / 2 - ball.offsetHeight / 2;
-        var ball_speed_X = 3;
-        var ball_speed_Y = 3;
+        var ball_speed_X = 0.5;
+        var ball_speed_Y = 0.5;
 
         var scoreA = 0;
         var scoreB = 0;
@@ -177,7 +183,7 @@
             }
 
             var message = "Game Over!\n" + winner + " wins!\nPress 'R' to restart.";
-            alert(message);
+            document.getElementById("response-message").textContent = message;
         }
 
         // Reset the game
@@ -190,6 +196,42 @@
             scoreB = 0;
             gameEnded = false;
         }
+
+        // Function to handle the button click event
+        function handleFollowBall() {
+            document.getElementById("response-message").textContent = "Request sent...";
+
+            // Prepare the request data
+            var requestData = {
+                input: "My y-coordinate is:" + paddleA_Y + " and opponent's y-coordinate is:" 
+                                                + ball_Y + " should I go down or up to meet opponent?"
+            };
+
+            // Make a POST request to the /follow-ball endpoint
+            fetch("http://127.0.0.1:5000/follow-ball", {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                // Process the response data
+                var message = data.message;
+
+                // Update the UI with the generated message
+                document.getElementById("response-message").textContent = message;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        }
+
+        // Attach the event listener to the submit button
+        document.getElementById("submit-button").addEventListener("click", handleFollowBall);
 
         // Game loop
         setInterval(update, 10);
